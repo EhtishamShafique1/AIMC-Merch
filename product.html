@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Product • AIMC Merch</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="index.html"
+          ><i class="fa-solid fa-shirt"></i> AIMC Merch</a
+        >
+        <div class="header-actions">
+          <a class="icon-btn" href="checkout.html"
+            ><i class="fa-solid fa-cart-shopping"></i><span>Cart</span
+            ><span id="cartBadge" class="badge">0</span></a
+          >
+        </div>
+      </header>
+
+      <div id="detail" class="detail"></div>
+    </div>
+
+    <script src="assets/products.js"></script>
+    <script src="assets/cart.js"></script>
+    <script>
+      const money = (n) => `PKR ${Number(n).toLocaleString()}`;
+      const qs = new URLSearchParams(location.search);
+      const p = (window.PRODUCTS || []).find((x) => x.id === qs.get("id"));
+      const root = document.getElementById("detail");
+
+      async function render() {
+        if (!p) {
+          root.innerHTML = `<div class="card pad">Product not found. <a href="index.html">Back</a></div>`;
+          return;
+        }
+
+        // Try to get live variants (price+stock). Fall back if API not set or fails.
+        let variants = [];
+        try {
+          variants = await Cart.getVariants(p.id);
+        } catch (e) {
+          variants = [];
+        }
+
+        const vMap = {};
+        variants.forEach((v) => (vMap[v.size] = v));
+
+        const sizeList = variants.length
+          ? variants.map((v) => v.size)
+          : p.sizes || ["S", "M", "L", "XL"];
+        const sizeOptions = sizeList
+          .map((s) => `<option>${s}</option>`)
+          .join("");
+
+        const imgs = p.images?.length ? p.images : [""];
+        const thumbs = imgs
+          .map(
+            (src, i) =>
+              `<img src="${src}" data-src="${src}" class="${
+                i ? "" : "active"
+              }" alt="Photo ${i + 1}">`
+          )
+          .join("");
+
+        root.innerHTML = `
+        <div class="card pad">
+          <div class="gallery">
+            <div class="zoom-wrap" id="zoom">
+              <img class="zoom-img" id="mainImg" src="${imgs[0]}" alt="${
+          p.name
+        }">
+              <button id="zoomToggle" class="zoom-toggle"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom</button>
+            </div>
+            <div class="thumbs" id="thumbs">${thumbs}</div>
+          </div>
+        </div>
+
+        <div class="card pad">
+          <div class="section-title">${p.name}</div>
+          <div class="muted" style="margin:4px 0">${p.type || ""}</div>
+          <div id="priceBox" class="price-lg">${money(p.price)}</div>
+
+          <div class="buy-row">
+            <div>
+              <label>Size</label>
+              <select id="sizeSel" class="input">${sizeOptions}</select>
+            </div>
+            <div>
+              <label>Qty</label>
+              <input id="qtySel" type="number" min="1" value="1" class="input">
+            </div>
+            <div style="align-self:end">
+              <button id="addBtn" class="btn"><i class="fa-solid fa-cart-plus"></i> Add to cart</button>
+            </div>
+          </div>
+          <div id="stockNote" class="muted stock-note"></div>
+
+          <div class="muted" style="margin-top:12px">${p.desc || ""}</div>
+        </div>
+      `;
+
+        // Thumbs
+        const main = document.getElementById("mainImg");
+        document.getElementById("thumbs").addEventListener("click", (e) => {
+          const t = e.target.closest("img");
+          if (!t) return;
+          main.src = t.dataset.src;
+          [...t.parentNode.children].forEach((x) =>
+            x.classList.remove("active")
+          );
+          t.classList.add("active");
+        });
+
+        // Zoom (toggle + hover position)
+        const wrap = document.getElementById("zoom");
+        const toggle = document.getElementById("zoomToggle");
+        let zoomed = false;
+        const setXY = (ev) => {
+          const r = wrap.getBoundingClientRect();
+          wrap.style.setProperty(
+            "--x",
+            ((ev.clientX - r.left) / r.width) * 100 + "%"
+          );
+          wrap.style.setProperty(
+            "--y",
+            ((ev.clientY - r.top) / r.height) * 100 + "%"
+          );
+        };
+        wrap.addEventListener("mousemove", (e) => {
+          if (zoomed) {
+            setXY(e);
+          }
+        });
+        wrap.addEventListener("mouseleave", () =>
+          wrap.classList.remove("zoomed")
+        );
+        wrap.addEventListener("click", (e) => {
+          zoomed = !zoomed;
+          wrap.classList.toggle("zoomed", zoomed);
+          setXY(e);
+          toggle.innerHTML = zoomed
+            ? '<i class="fa-solid fa-magnifying-glass-minus"></i> Zoom out'
+            : '<i class="fa-solid fa-magnifying-glass-plus"></i> Zoom';
+        });
+        toggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          wrap.click();
+        });
+
+        // Stock + price by size
+        const sizeSel = document.getElementById("sizeSel");
+        const priceBox = document.getElementById("priceBox");
+        const stockNote = document.getElementById("stockNote");
+        const addBtn = document.getElementById("addBtn");
+
+        function updateBySize() {
+          const s = sizeSel.value;
+          const v = vMap[s];
+          const price = v ? Number(v.price || p.price) : p.price;
+          const left = v ? Number(v.stock || 0) : undefined;
+
+          priceBox.textContent = money(price);
+          if (left === undefined) {
+            stockNote.textContent = "";
+            addBtn.disabled = false;
+            addBtn.style.opacity = 1;
+          } else if (left <= 0) {
+            stockNote.textContent = "Out of stock";
+            addBtn.disabled = true;
+            addBtn.style.opacity = 0.6;
+          } else if (left <= 10) {
+            stockNote.textContent = `Only ${left} left`;
+            addBtn.disabled = false;
+            addBtn.style.opacity = 1;
+          } else {
+            stockNote.textContent = "In stock";
+            addBtn.disabled = false;
+            addBtn.style.opacity = 1;
+          }
+        }
+        sizeSel.addEventListener("change", updateBySize);
+        updateBySize();
+
+        // Add to cart
+        addBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const size = sizeSel.value;
+          const qty = Math.max(
+            1,
+            parseInt(document.getElementById("qtySel").value || "1")
+          );
+          const v = vMap[size];
+          const price = v ? Number(v.price || p.price) : p.price;
+
+          Cart.add({ id: p.id, name: p.name, size, price, qty });
+          refreshCartBadge();
+          const old = addBtn.innerHTML;
+          addBtn.innerHTML = '<i class="fa-solid fa-check"></i> Added';
+          setTimeout(() => (addBtn.innerHTML = old), 1200);
+        });
+
+        refreshCartBadge();
+      }
+
+      render();
+    </script>
+  </body>
+</html>

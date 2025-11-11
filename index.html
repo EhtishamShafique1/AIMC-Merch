@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AIMC Merch</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <!-- Header -->
+    <header>
+      <a class="brand" href="index.html"><i class="fa-solid fa-shirt"></i> AIMC Merch</a>
+      <div class="header-actions">
+        <a class="icon-btn" href="checkout.html"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span><span id="cartBadge" class="badge">0</span></a>
+      </div>
+    </header>
+
+    <!-- Intro -->
+    <div class="card pad">
+      <div class="section-title">Allama Iqbal Medical College — Merch</div>
+      <div class="muted">Tap a product to see details, select size, and add to cart.</div>
+    </div>
+
+    <!-- Products grid -->
+    <div id="grid" class="grid" style="margin-top:14px"></div>
+  </div>
+
+  <script src="assets/products.js"></script>
+  <script src="assets/cart.js"></script>
+  <script>
+    const grid  = document.getElementById('grid');
+    const money = n => `PKR ${Number(n).toLocaleString()}`;
+
+    function card(p){
+      return `
+        <a class="card" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${p.name}">
+          <div class="img"><img src="${p.images?.[0] || ''}" alt="${p.name}"></div>
+          <div class="pad">
+            <div class="title">${p.name}</div>
+            <div class="muted">${p.type || ''}</div>
+            <div class="price">${money(p.price)}</div>
+          </div>
+        </a>
+      `;
+    }
+
+    function render(){
+      const items = (window.PRODUCTS || []);
+      grid.innerHTML = items.map(card).join('');
+      refreshCartBadge();
+    }
+
+    render();
+  </script>
+</body>
+</html>

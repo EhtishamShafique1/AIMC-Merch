@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Checkout • AIMC Merch</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="index.html"
+          ><i class="fa-solid fa-shirt"></i> AIMC Merch</a
+        >
+        <div class="header-actions">
+          <a class="icon-btn" href="checkout.html"
+            ><i class="fa-solid fa-cart-shopping"></i><span>Cart</span
+            ><span id="cartBadge" class="badge">0</span></a
+          >
+        </div>
+      </header>
+
+      <div class="card pad">
+        <div class="section-title">Your Cart</div>
+        <div class="table-wrap">
+          <table class="table" id="cartTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Size</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="right" style="margin-top: 10px">
+          <div class="muted">Subtotal:</div>
+          <div id="subtotal" style="font-weight: 800"></div>
+        </div>
+      </div>
+
+      <form
+        id="checkout"
+        class="card pad"
+        style="margin-top: 16px"
+        enctype="multipart/form-data"
+      >
+        <div class="section-title">Checkout</div>
+
+        <div class="stack" style="margin-top: 8px">
+          <div>
+            <label>Full name</label>
+            <input name="name" required class="input" autocomplete="name" />
+          </div>
+          <div>
+            <label>Email</label>
+            <input
+              name="email"
+              type="email"
+              required
+              class="input"
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div>
+            <label>Phone (WhatsApp)</label>
+            <input
+              name="phone"
+              required
+              class="input"
+              inputmode="tel"
+              autocomplete="tel"
+            />
+          </div>
+
+          <div>
+            <label>Delivery</label>
+            <select name="delivery" required class="input">
+              <option value="Pickup (Campus)">Pickup (Campus)</option>
+              <option value="Delivery (Lahore)">Delivery (Lahore)</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Payment method</label>
+            <select name="payment_method" required class="input" id="payMethod">
+              <option value="" selected disabled>Select payment method…</option>
+              <option value="JazzCash">JazzCash</option>
+              <option value="Easypaisa">Easypaisa</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div>
+            <label id="txnLabel">Transaction ID</label>
+            <input
+              name="txn_id"
+              required
+              class="input"
+              id="txnInput"
+              placeholder="Enter the TXN ID from your payment app"
+            />
+          </div>
+
+          <div style="grid-column: 1/-1">
+            <label>Upload payment screenshot (PNG/JPG)</label>
+            <input
+              type="file"
+              name="screenshot"
+              accept="image/*"
+              required
+              class="input"
+              style="padding: 8px"
+            />
+          </div>
+
+          <div style="grid-column: 1/-1">
+            <label>Notes (optional)</label>
+            <textarea
+              name="notes"
+              rows="3"
+              class="input"
+              placeholder="Any special instructions, name on jersey, etc."
+            ></textarea>
+          </div>
+        </div>
+
+        <div id="paymentInfo" class="muted" style="margin-top: 8px">
+          Select a payment method to see the exact account and instructions.
+        </div>
+
+        <div class="right" style="margin-top: 12px">
+          <button type="button" class="btn secondary" id="clear">
+            Clear Cart
+          </button>
+          <button class="btn" type="submit">Place Order</button>
+        </div>
+
+        <div id="status" class="status muted"></div>
+      </form>
+    </div>
+
+    <script src="assets/products.js"></script>
+    <script src="assets/cart.js"></script>
+    <script>
+      const tbody = document.querySelector("#cartTable tbody");
+      const subtotalEl = document.getElementById("subtotal");
+      const statusEl = document.getElementById("status");
+
+      function render() {
+        const cart = Cart.load();
+        if (!cart.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="muted">Your cart is empty.</td></tr>`;
+        } else {
+          tbody.innerHTML = cart
+            .map(
+              (i) => `
+          <tr>
+            <td>${i.name}</td>
+            <td>${i.size}</td>
+            <td><input type="number" min="1" value="${
+              i.qty
+            }" class="input" style="width:96px" onchange="updateQty('${
+                i.key
+              }', this.value)"></td>
+            <td>PKR ${Number(i.price * i.qty).toLocaleString()}</td>
+            <td><button class="btn secondary" onclick="removeItem('${
+              i.key
+            }');return false;">Remove</button></td>
+          </tr>`
+            )
+            .join("");
+        }
+        subtotalEl.textContent = `PKR ${Number(
+          Cart.subtotal()
+        ).toLocaleString()}`;
+        refreshCartBadge();
+      }
+
+      window.updateQty = (key, val) => {
+        const c = Cart.load();
+        const it = c.find((x) => x.key === key);
+        if (it) {
+          it.qty = Math.max(1, parseInt(val || 1));
+          Cart.save(c);
+          render();
+        }
+      };
+      window.removeItem = (key) => {
+        const c = Cart.load().filter((i) => i.key !== key);
+        Cart.save(c);
+        render();
+      };
+
+      document.getElementById("clear").addEventListener("click", () => {
+        Cart.clear();
+        render();
+      });
+
+      document
+        .getElementById("checkout")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          statusEl.textContent = "Submitting...";
+          try {
+            const res = await Cart.submitOrder(e.target);
+            if (res.ok) {
+              statusEl.innerHTML = `<span class="ok">✅ Order placed!</span> Order ID: <b>${
+                res.orderId
+              }</b>. Total: <b>PKR ${Number(
+                res.total || 0
+              ).toLocaleString()}</b>. We’ll confirm on WhatsApp.`;
+              Cart.clear();
+              render();
+              e.target.reset();
+              // reset payment info after clearing form
+              updatePayInfo();
+            } else if (res.reason === "out_of_stock") {
+              const lines = res.shortages
+                .map(
+                  (s) =>
+                    `• <b>${s.id}</b> (${s.size}) — requested ${s.requested}, available ${s.available}`
+                )
+                .join("<br>");
+              statusEl.innerHTML = `<span class="err">❌ Not enough stock:</span><br>${lines}<br><span class="muted">Please adjust quantities/sizes and try again.</span>`;
+            } else {
+              statusEl.innerHTML = `<span class="err">❌ Error:</span> ${
+                res.error || "Submit failed"
+              }`;
+            }
+          } catch (err) {
+            statusEl.innerHTML = `<span class="err">❌ Error:</span> ${
+              err.message || err
+            }`;
+          }
+        });
+
+      // --- Dynamic payment info based on method ---
+      const paySel = document.getElementById("payMethod");
+      const payInfo = document.getElementById("paymentInfo");
+      const txnLbl = document.getElementById("txnLabel");
+      const txnInp = document.getElementById("txnInput");
+
+      const methods = {
+        JazzCash: {
+          text: "Send payment to <b>JazzCash 03xx-xxxxxxx (Name)</b>. After sending, enter the <b>Transaction ID from your JazzCash app</b> and upload a screenshot.",
+          placeholder: "JazzCash TXN ID (e.g. T20ABCDE…)",
+          label: "Transaction ID (from JazzCash app)",
+        },
+        Easypaisa: {
+          text: "Send payment to <b>Easypaisa 03xx-xxxxxxx (Name)</b>. Then enter the <b>Transaction ID from Easypaisa</b> and upload a screenshot.",
+          placeholder: "Easypaisa TXN ID",
+          label: "Transaction ID (from Easypaisa app)",
+        },
+        "Bank Transfer": {
+          text: "Transfer to <b>Bank Account #0000-123456789 (Name)</b>. Enter the <b>Bank TXN/Reference ID</b> and upload a screenshot.",
+          placeholder: "Bank TXN / Reference ID",
+          label: "Transaction ID (Bank transfer)",
+        },
+      };
+
+      function updatePayInfo() {
+        const v = paySel.value;
+        if (!v) {
+          payInfo.innerHTML =
+            "Select a payment method to see the exact account and instructions.";
+          txnLbl.textContent = "Transaction ID";
+          txnInp.placeholder = "Enter the TXN ID from your payment app";
+          return;
+        }
+        const m = methods[v];
+        payInfo.innerHTML = m.text;
+        txnLbl.textContent = m.label;
+        txnInp.placeholder = m.placeholder;
+      }
+      paySel.addEventListener("change", updatePayInfo);
+      updatePayInfo(); // run on load
+
+      render();
+    </script>
+  </body>
+</html>
