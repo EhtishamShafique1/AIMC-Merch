@@ -30,6 +30,7 @@
         </div>
       </header>
 
+      <!-- Cart -->
       <div class="card pad">
         <div class="section-title">Your Cart</div>
         <div class="table-wrap">
@@ -46,12 +47,23 @@
             <tbody></tbody>
           </table>
         </div>
-        <div class="right" style="margin-top: 10px">
+
+        <!-- Summary with delivery fee -->
+        <div class="right" style="margin-top: 10px; gap: 16px; flex-wrap: wrap">
           <div class="muted">Subtotal:</div>
-          <div id="subtotal" style="font-weight: 800"></div>
+          <div id="subtotal" style="font-weight: 800">PKR 0</div>
+          <div class="muted" id="feeLabel" style="display: none">
+            • Delivery fee:
+          </div>
+          <div id="deliveryFee" style="font-weight: 800; display: none">
+            PKR 0
+          </div>
+          <div class="muted">• Total:</div>
+          <div id="grandTotal" style="font-weight: 800">PKR 0</div>
         </div>
       </div>
 
+      <!-- Checkout form -->
       <form
         id="checkout"
         class="card pad"
@@ -76,7 +88,6 @@
               autocomplete="email"
             />
           </div>
-
           <div>
             <label>Phone (WhatsApp)</label>
             <input
@@ -90,19 +101,30 @@
 
           <div>
             <label>Delivery</label>
-            <select name="delivery" required class="input">
+            <select name="delivery" required class="input" id="deliverySel">
               <option value="Pickup (Campus)">Pickup (Campus)</option>
               <option value="Delivery (Lahore)">Delivery (Lahore)</option>
             </select>
+          </div>
+
+          <!-- Address (only visible when Delivery is selected) -->
+          <div id="addressRow" style="grid-column: 1/-1; display: none">
+            <label>Delivery address</label>
+            <textarea
+              name="address"
+              rows="2"
+              class="input"
+              id="addressField"
+              placeholder="House/Street, Area, City. Required for delivery orders."
+            ></textarea>
           </div>
 
           <div>
             <label>Payment method</label>
             <select name="payment_method" required class="input" id="payMethod">
               <option value="" selected disabled>Select payment method…</option>
-              <option value="JazzCash">JazzCash</option>
-              <option value="Easypaisa">Easypaisa</option>
-              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="HBL">HBL (Bank Transfer)</option>
+              <option value="ABL">ABL (Bank Transfer)</option>
             </select>
           </div>
 
@@ -113,7 +135,7 @@
               required
               class="input"
               id="txnInput"
-              placeholder="Enter the TXN ID from your payment app"
+              placeholder="Enter the bank TXN / reference ID"
             />
           </div>
 
@@ -140,8 +162,9 @@
           </div>
         </div>
 
+        <!-- Dynamic bank details (copyable) + amount to transfer -->
         <div id="paymentInfo" class="muted" style="margin-top: 8px">
-          Select a payment method to see the exact account and instructions.
+          Select a payment method to see account details and instructions.
         </div>
 
         <div class="right" style="margin-top: 12px">
@@ -158,10 +181,33 @@
     <script src="assets/products.js"></script>
     <script src="assets/cart.js"></script>
     <script>
+      // ---------- DOM refs ----------
       const tbody = document.querySelector("#cartTable tbody");
       const subtotalEl = document.getElementById("subtotal");
+      const feeLabelEl = document.getElementById("feeLabel");
+      const feeEl = document.getElementById("deliveryFee");
+      const grandEl = document.getElementById("grandTotal");
       const statusEl = document.getElementById("status");
 
+      const paySel = document.getElementById("payMethod");
+      const payInfo = document.getElementById("paymentInfo");
+      const txnLbl = document.getElementById("txnLabel");
+      const txnInp = document.getElementById("txnInput");
+
+      const deliverySel = document.getElementById("deliverySel");
+      const addressRow = document.getElementById("addressRow");
+      const addressField = document.getElementById("addressField");
+
+      // ---------- Helpers ----------
+      function formatPKR(n) {
+        return `PKR ${Number(n || 0).toLocaleString()}`;
+      }
+      function calcFee() {
+        const v = (deliverySel.value || "").toLowerCase();
+        return v.includes("delivery") ? 200 : 0;
+      }
+
+      // ---------- Cart render ----------
       function render() {
         const cart = Cart.load();
         if (!cart.length) {
@@ -178,7 +224,7 @@
             }" class="input" style="width:96px" onchange="updateQty('${
                 i.key
               }', this.value)"></td>
-            <td>PKR ${Number(i.price * i.qty).toLocaleString()}</td>
+            <td>${formatPKR(i.price * i.qty)}</td>
             <td><button class="btn secondary" onclick="removeItem('${
               i.key
             }');return false;">Remove</button></td>
@@ -186,10 +232,9 @@
             )
             .join("");
         }
-        subtotalEl.textContent = `PKR ${Number(
-          Cart.subtotal()
-        ).toLocaleString()}`;
         refreshCartBadge();
+        recalcTotals(); // summary
+        updatePayInfoAmount(); // amount in payment box (if visible)
       }
 
       window.updateQty = (key, val) => {
@@ -206,30 +251,162 @@
         Cart.save(c);
         render();
       };
-
       document.getElementById("clear").addEventListener("click", () => {
         Cart.clear();
         render();
       });
 
+      // ---------- Payment (Bank only) ----------
+      const methods = {
+        HBL: {
+          accountLabel: "HBL Account",
+          accountNumber: "12447901757003",
+          holder: "Shahab Zafar",
+          text: "Transfer to the bank account below. After sending, enter the Bank TXN / Reference ID and upload a screenshot.",
+        },
+        ABL: {
+          accountLabel: "ABL Account",
+          accountNumber: "53580020056014000012",
+          holder: "Shahab Zafar",
+          text: "Transfer to the bank account below. After sending, enter the Bank TXN / Reference ID and upload a screenshot.",
+        },
+      };
+
+      async function copyToClipboard(text, el) {
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+          }
+          const orig = el.innerHTML;
+          el.innerHTML = "Copied";
+          setTimeout(() => (el.innerHTML = orig), 1200);
+        } catch {
+          alert(
+            "Copy failed — please select the account number and copy manually."
+          );
+        }
+      }
+
+      function updatePayInfo() {
+        const v = paySel.value;
+        if (!v) {
+          payInfo.innerHTML =
+            "Select a payment method to see account details and instructions.";
+          txnLbl.textContent = "Transaction ID";
+          txnInp.placeholder = "Enter the bank TXN / reference ID";
+          return;
+        }
+        const m = methods[v];
+        txnLbl.textContent = "Transaction ID (Bank transfer)";
+        txnInp.placeholder = "Bank TXN / Reference ID";
+
+        // compute latest amount to transfer (grand total)
+        const sub = Cart.subtotal();
+        const fee = calcFee();
+        const grand = sub + fee;
+
+        payInfo.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>${m.text}</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:2px">
+            <div style="flex:1;padding:10px;border-radius:10px;background:var(--card);border:1px solid var(--line);">
+              <div style="font-size:13px;color:var(--muted)">${
+                m.accountLabel
+              } — ${m.holder}</div>
+              <div style="margin-top:6px;font-weight:800;word-break:break-all;user-select:text" id="acctNum">${
+                m.accountNumber
+              }</div>
+            </div>
+            <button type="button" class="btn secondary" id="copyBtn">Copy</button>
+          </div>
+          <div style="padding:10px;border-radius:10px;background:var(--card);border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+            <div class="muted">Amount to transfer</div>
+            <div id="payAmount" style="font-weight:800">${formatPKR(
+              grand
+            )}</div>
+          </div>
+        </div>
+      `;
+
+        // wire copy
+        const copyBtn = document.getElementById("copyBtn");
+        const acctNum = document.getElementById("acctNum").textContent;
+        copyBtn.addEventListener("click", () =>
+          copyToClipboard(acctNum, copyBtn)
+        );
+      }
+
+      // Only update the amount text inside the payment box (no full re-render)
+      function updatePayInfoAmount() {
+        const amtEl = document.getElementById("payAmount");
+        if (!amtEl) return; // not selected yet
+        const sub = Cart.subtotal();
+        const fee = calcFee();
+        amtEl.textContent = formatPKR(sub + fee);
+      }
+
+      paySel.addEventListener("change", () => {
+        updatePayInfo();
+      });
+
+      // ---------- Address UI + totals ----------
+      function updateAddressUI() {
+        const need = (deliverySel.value || "").includes("Delivery");
+        addressRow.style.display = need ? "" : "none";
+        addressField.required = need;
+        if (!need) addressField.value = "";
+      }
+
+      function recalcTotals() {
+        const sub = Cart.subtotal();
+        const fee = calcFee();
+        const grand = sub + fee;
+
+        subtotalEl.textContent = formatPKR(sub);
+        grandEl.textContent = formatPKR(grand);
+
+        if (fee > 0) {
+          feeLabelEl.style.display = "inline";
+          feeEl.style.display = "inline";
+          feeEl.textContent = formatPKR(fee);
+        } else {
+          feeLabelEl.style.display = "none";
+          feeEl.style.display = "none";
+        }
+      }
+
+      deliverySel.addEventListener("change", () => {
+        updateAddressUI();
+        recalcTotals();
+        updatePayInfoAmount();
+      });
+
+      // ---------- Submit ----------
       document
         .getElementById("checkout")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           statusEl.textContent = "Submitting...";
           try {
-            const res = await Cart.submitOrder(e.target);
+            const res = await Cart.submitOrder(e.target); // sends cart_json + total + delivery_fee
             if (res.ok) {
               statusEl.innerHTML = `<span class="ok">✅ Order placed!</span> Order ID: <b>${
                 res.orderId
-              }</b>. Total: <b>PKR ${Number(
+              }</b>. Total: <b>${formatPKR(
                 res.total || 0
-              ).toLocaleString()}</b>. We’ll confirm on WhatsApp.`;
+              )}</b>. We’ll confirm on WhatsApp.`;
               Cart.clear();
               render();
               e.target.reset();
-              // reset payment info after clearing form
               updatePayInfo();
+              updateAddressUI();
             } else if (res.reason === "out_of_stock") {
               const lines = res.shortages
                 .map(
@@ -250,48 +427,10 @@
           }
         });
 
-      // --- Dynamic payment info based on method ---
-      const paySel = document.getElementById("payMethod");
-      const payInfo = document.getElementById("paymentInfo");
-      const txnLbl = document.getElementById("txnLabel");
-      const txnInp = document.getElementById("txnInput");
-
-      const methods = {
-        JazzCash: {
-          text: "Send payment to <b>JazzCash 03xx-xxxxxxx (Name)</b>. After sending, enter the <b>Transaction ID from your JazzCash app</b> and upload a screenshot.",
-          placeholder: "JazzCash TXN ID (e.g. T20ABCDE…)",
-          label: "Transaction ID (from JazzCash app)",
-        },
-        Easypaisa: {
-          text: "Send payment to <b>Easypaisa 03xx-xxxxxxx (Name)</b>. Then enter the <b>Transaction ID from Easypaisa</b> and upload a screenshot.",
-          placeholder: "Easypaisa TXN ID",
-          label: "Transaction ID (from Easypaisa app)",
-        },
-        "Bank Transfer": {
-          text: "Transfer to <b>Bank Account #0000-123456789 (Name)</b>. Enter the <b>Bank TXN/Reference ID</b> and upload a screenshot.",
-          placeholder: "Bank TXN / Reference ID",
-          label: "Transaction ID (Bank transfer)",
-        },
-      };
-
-      function updatePayInfo() {
-        const v = paySel.value;
-        if (!v) {
-          payInfo.innerHTML =
-            "Select a payment method to see the exact account and instructions.";
-          txnLbl.textContent = "Transaction ID";
-          txnInp.placeholder = "Enter the TXN ID from your payment app";
-          return;
-        }
-        const m = methods[v];
-        payInfo.innerHTML = m.text;
-        txnLbl.textContent = m.label;
-        txnInp.placeholder = m.placeholder;
-      }
-      paySel.addEventListener("change", updatePayInfo);
-      updatePayInfo(); // run on load
-
-      render();
+      // ---------- Init ----------
+      updateAddressUI();
+      updatePayInfo(); // initial message
+      render(); // draws cart and totals
     </script>
   </body>
 </html>

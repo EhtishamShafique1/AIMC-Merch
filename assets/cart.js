@@ -1,6 +1,8 @@
 (function () {
   const KEY = "aimc_cart";
-  const API = "https://script.google.com/macros/s/AKfycbytFn_U1s4rG29ayl16zGX6kgT6TCEq0NYi3R3ay5YCvpoipD9TYkYEOv-TrLIXUi23RQ/exec"; // <-- your Apps Script /exec URL
+  const API =
+    "https://script.google.com/macros/s/AKfycbytFn_U1s4rG29ayl16zGX6kgT6TCEq0NYi3R3ay5YCvpoipD9TYkYEOv-TrLIXUi23RQ/exec"; // <-- your Apps Script /exec URL
+  const DELIVERY_FEE_PK = 200;
 
   function load() {
     return JSON.parse(localStorage.getItem(KEY) || "[]");
@@ -48,13 +50,24 @@
     });
   }
 
+  function deliveryFeeFromForm(formEl) {
+    const v = (
+      formEl.querySelector('[name="delivery"]')?.value || ""
+    ).toLowerCase();
+    return v.includes("delivery") ? DELIVERY_FEE_PK : 0;
+  }
+
   async function submitOrder(formEl) {
     const cart = load();
     if (!cart.length) throw new Error("Cart is empty");
 
+    const fee = deliveryFeeFromForm(formEl);
+    const grand = subtotal() + fee;
+
     const fd = new FormData(formEl);
     fd.append("cart_json", JSON.stringify(cart));
-    fd.append("total", String(subtotal()));
+    fd.append("delivery_fee", String(fee));
+    fd.append("total", String(grand));
 
     const file = formEl.querySelector('input[name="screenshot"]')?.files?.[0];
     if (file) {
@@ -64,10 +77,9 @@
 
     const res = await fetch(API, { method: "POST", body: fd });
     const json = await res.json();
-    return json; // {ok, orderId, total, fileUrl} or {ok:false, reason:'out_of_stock', shortages:[...]}
+    return json; // {ok, orderId, total, ...} or {ok:false,...}
   }
 
-  // stock/price fetchers (used on product page)
   async function getVariants(productId) {
     const url = `${API}?stock=1&id=${encodeURIComponent(productId)}`;
     const r = await fetch(url);

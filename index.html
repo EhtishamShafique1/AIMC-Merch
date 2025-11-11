@@ -1,60 +1,157 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AIMC Merch</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AIMC Merch</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="assets/styles.css">
-</head>
-<body>
-  <div class="wrap">
-    <!-- Header -->
-    <header>
-      <a class="brand" href="index.html"><i class="fa-solid fa-shirt"></i> AIMC Merch</a>
-      <div class="header-actions">
-        <a class="icon-btn" href="checkout.html"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span><span id="cartBadge" class="badge">0</span></a>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <style>
+      /* simple skeletons so the page doesn't feel empty while fetching */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.06),
+          rgba(255, 255, 255, 0.12),
+          rgba(255, 255, 255, 0.06)
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.2s linear infinite;
+        border-radius: 12px;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      .sk-card {
+        display: block;
+        border: 1px solid var(--line);
+        padding: 12px;
+        background: var(--surface);
+        border-radius: 16px;
+      }
+      .sk-img {
+        aspect-ratio: 4/3;
+        border-radius: 12px;
+        margin-bottom: 10px;
+      }
+      .sk-line {
+        height: 14px;
+        margin: 6px 0;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="index.html"
+          ><i class="fa-solid fa-shirt"></i> AIMC Merch</a
+        >
+        <div class="header-actions">
+          <a class="icon-btn" href="checkout.html"
+            ><i class="fa-solid fa-cart-shopping"></i><span>Cart</span
+            ><span id="cartBadge" class="badge">0</span></a
+          >
+        </div>
+      </header>
+
+      <div class="card pad">
+        <div class="section-title">Allama Iqbal Medical College — Merch</div>
+        <div class="muted">
+          Tap a product to see details, choose size, and add to cart.
+        </div>
       </div>
-    </header>
 
-    <!-- Intro -->
-    <div class="card pad">
-      <div class="section-title">Allama Iqbal Medical College — Merch</div>
-      <div class="muted">Tap a product to see details, select size, and add to cart.</div>
+      <div id="grid" class="grid" style="margin-top: 14px"></div>
     </div>
 
-    <!-- Products grid -->
-    <div id="grid" class="grid" style="margin-top:14px"></div>
-  </div>
+    <script src="assets/products.js"></script>
+    <script src="assets/cart.js"></script>
+    <script>
+      const grid = document.getElementById("grid");
+      const money = (n) => `PKR ${Number(n).toLocaleString()}`;
 
-  <script src="assets/products.js"></script>
-  <script src="assets/cart.js"></script>
-  <script>
-    const grid  = document.getElementById('grid');
-    const money = n => `PKR ${Number(n).toLocaleString()}`;
-
-    function card(p){
-      return `
-        <a class="card" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="${p.name}">
-          <div class="img"><img src="${p.images?.[0] || ''}" alt="${p.name}"></div>
-          <div class="pad">
-            <div class="title">${p.name}</div>
-            <div class="muted">${p.type || ''}</div>
-            <div class="price">${money(p.price)}</div>
+      // draw lightweight skeletons while we fetch backend prices
+      function drawSkeletons(count = (window.PRODUCTS || []).length) {
+        const sk = [];
+        for (let i = 0; i < count; i++) {
+          sk.push(`
+          <div class="sk-card">
+            <div class="skeleton sk-img"></div>
+            <div class="skeleton sk-line" style="width:70%"></div>
+            <div class="skeleton sk-line" style="width:40%"></div>
           </div>
-        </a>
-      `;
-    }
+        `);
+        }
+        grid.innerHTML = sk.join("");
+      }
 
-    function render(){
-      const items = (window.PRODUCTS || []);
-      grid.innerHTML = items.map(card).join('');
-      refreshCartBadge();
-    }
+      async function fetchMinPrice(productId) {
+        try {
+          const variants = await Cart.getVariants(productId); // [{price, stock, size}]
+          const nums = (variants || [])
+            .map((v) => Number(v.price || 0))
+            .filter((x) => isFinite(x) && x > 0);
+          if (nums.length) return Math.min(...nums);
+          return null; // no price found
+        } catch (_) {
+          return null;
+        }
+      }
 
-    render();
-  </script>
-</body>
+      async function render() {
+        refreshCartBadge();
+        const items = window.PRODUCTS || [];
+        drawSkeletons(items.length);
+
+        // fetch all min prices first, then render once
+        const priced = await Promise.all(
+          items.map(async (p) => {
+            const min = await fetchMinPrice(p.id);
+            return { ...p, minPrice: min };
+          })
+        );
+
+        // now render cards using backend-only price (or no price text if missing)
+        grid.innerHTML = priced
+          .map((p) => {
+            const priceHtml =
+              p.minPrice && isFinite(p.minPrice)
+                ? `<div class="price">From ${money(p.minPrice)}</div>`
+                : `<div class="muted">See details</div>`;
+            return `
+          <a class="card" href="product.html?id=${encodeURIComponent(
+            p.id
+          )}" aria-label="${p.name}">
+            <div class="img"><img src="${p.images?.[0] || ""}" alt="${
+              p.name
+            }"></div>
+            <div class="pad">
+              <div class="title">${p.name}</div>
+              <div class="muted">${p.type || ""}</div>
+              ${priceHtml}
+            </div>
+          </a>
+        `;
+          })
+          .join("");
+      }
+
+      render();
+    </script>
+  </body>
 </html>
