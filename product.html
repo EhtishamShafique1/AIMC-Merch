@@ -35,8 +35,6 @@
 
     <script src="assets/products.js"></script>
     <script src="assets/cart.js"></script>
-    <script src="assets/products.js"></script>
-    <script src="assets/cart.js"></script>
     <script>
       const money = (n) => `PKR ${Number(n).toLocaleString()}`;
       const qs = new URLSearchParams(location.search);
@@ -49,7 +47,7 @@
           return;
         }
 
-        // Try to get live variants (price+stock). Fall back if API not set or fails.
+        // Try to get live variants (price+stock) from backend
         let variants = [];
         try {
           variants = await Cart.getVariants(p.id);
@@ -129,32 +127,60 @@
         let zoomed = false;
         let currentIndex = 0;
 
-        function setXY(ev) {
+        function setXYFromEvent(ev) {
+          let clientX, clientY;
+          if (ev.touches && ev.touches.length) {
+            clientX = ev.touches[0].clientX;
+            clientY = ev.touches[0].clientY;
+          } else if (ev.changedTouches && ev.changedTouches.length) {
+            clientX = ev.changedTouches[0].clientX;
+            clientY = ev.changedTouches[0].clientY;
+          } else {
+            clientX = ev.clientX;
+            clientY = ev.clientY;
+          }
           const r = wrap.getBoundingClientRect();
           wrap.style.setProperty(
             "--x",
-            ((ev.clientX - r.left) / r.width) * 100 + "%"
+            ((clientX - r.left) / r.width) * 100 + "%"
           );
           wrap.style.setProperty(
             "--y",
-            ((ev.clientY - r.top) / r.height) * 100 + "%"
+            ((clientY - r.top) / r.height) * 100 + "%"
           );
+        }
+
+        function applyZoomState() {
+          wrap.classList.toggle("zoomed", zoomed);
+          toggle.innerHTML = zoomed
+            ? '<i class="fa-solid fa-magnifying-glass-minus"></i> Zoom out'
+            : '<i class="fa-solid fa-magnifying-glass-plus"></i> Zoom';
+        }
+
+        function toggleZoom(force, ev) {
+          if (typeof force === "boolean") {
+            zoomed = force;
+          } else {
+            zoomed = !zoomed;
+          }
+          applyZoomState();
+          if (zoomed && ev) {
+            setXYFromEvent(ev);
+          }
         }
 
         function showImage(idx) {
           if (!imgs.length) return;
-          // wrap around
-          currentIndex = (idx + imgs.length) % imgs.length;
+          currentIndex = (idx + imgs.length) % imgs.length; // wrap
           main.src = imgs[currentIndex];
 
-          // update active thumb
           const allThumbs = thumbsEl.querySelectorAll("img");
           allThumbs.forEach((t, i) => {
             t.classList.toggle("active", i === currentIndex);
           });
         }
 
-        // Thumbs click -> change image
+        // Thumbnails click
         thumbsEl.addEventListener("click", (e) => {
           const t = e.target.closest("img");
           if (!t) return;
@@ -162,48 +188,41 @@
           showImage(idx);
         });
 
-        // Zoom (toggle + hover position)
+        // Mouse move (desktop) while zoomed
         wrap.addEventListener("mousemove", (e) => {
-          if (zoomed) setXY(e);
+          if (zoomed) setXYFromEvent(e);
         });
-        wrap.addEventListener("mouseleave", () =>
-          wrap.classList.remove("zoomed")
-        );
+
+        wrap.addEventListener("mouseleave", () => {
+          // don't auto-unzoom, just stop following – feels better
+        });
+
+        // Click on image area:
+        // - if NOT zoomed -> turn zoom ON at click position
+        // - if zoomed     -> just move zoom focus
         wrap.addEventListener("click", (e) => {
-          zoomed = !zoomed;
-          wrap.classList.toggle("zoomed", zoomed);
-          setXY(e);
-          toggle.innerHTML = zoomed
-            ? '<i class="fa-solid fa-magnifying-glass-minus"></i> Zoom out'
-            : '<i class="fa-solid fa-magnifying-glass-plus"></i> Zoom';
-        });
-        toggle.addEventListener("click", (e) => {
-          e.stopPropagation();
-          wrap.click();
-        });
-
-        // ---------- KEYBOARD NAV (← / →) ----------
-        document.addEventListener("keydown", (e) => {
-          // don't steal arrows when typing in inputs/textareas
-          const tag = (e.target.tagName || "").toLowerCase();
-          if (tag === "input" || tag === "textarea" || tag === "select") return;
-
-          if (e.key === "ArrowRight") {
-            e.preventDefault();
-            showImage(currentIndex + 1);
-          } else if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            showImage(currentIndex - 1);
+          if (e.target === toggle || toggle.contains(e.target)) return;
+          if (!zoomed) {
+            toggleZoom(true, e);
+          } else {
+            setXYFromEvent(e);
           }
         });
 
-        // ---------- TOUCH SWIPE (mobile) ----------
+        // Zoom toggle button (desktop + mobile)
+        toggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleZoom();
+        });
+
+        // ---------- TOUCH: SWIPE & PAN ----------
         let touchStartX = null;
 
+        // swipe only when NOT zoomed (when zoomed we pan instead)
         wrap.addEventListener(
           "touchstart",
           (e) => {
-            if (e.touches && e.touches.length === 1) {
+            if (!zoomed && e.touches.length === 1) {
               touchStartX = e.touches[0].clientX;
             }
           },
@@ -213,21 +232,27 @@
         wrap.addEventListener(
           "touchend",
           (e) => {
-            if (touchStartX === null) return;
-            const endX = e.changedTouches[0].clientX;
-            const diffX = endX - touchStartX;
-            const threshold = 40; // px
-
-            if (Math.abs(diffX) > threshold) {
-              if (diffX < 0) {
-                // swipe left -> next
-                showImage(currentIndex + 1);
-              } else {
-                // swipe right -> previous
-                showImage(currentIndex - 1);
+            if (!zoomed) {
+              if (touchStartX === null) return;
+              const endX = e.changedTouches[0].clientX;
+              const diffX = endX - touchStartX;
+              const threshold = 40;
+              if (Math.abs(diffX) > threshold) {
+                if (diffX < 0) showImage(currentIndex + 1); // swipe left
+                else showImage(currentIndex - 1); // swipe right
               }
+              touchStartX = null;
             }
-            touchStartX = null;
+          },
+          { passive: true }
+        );
+
+        // When zoomed, touchmove pans the zoomed image
+        wrap.addEventListener(
+          "touchmove",
+          (e) => {
+            if (!zoomed) return;
+            setXYFromEvent(e);
           },
           { passive: true }
         );
