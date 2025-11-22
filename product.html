@@ -36,7 +36,7 @@
     <script src="assets/products.js"></script>
     <script src="assets/cart.js"></script>
     <script>
-      const money = (n) => `PKR ${Number(n).toLocaleString()}`;
+      const money = (n) => `PKR ${Number(n).toLocaleString('en-PK').replace(/\./g, ',')}`;
       const qs = new URLSearchParams(location.search);
       const p = (window.PRODUCTS || []).find((x) => x.id === qs.get("id"));
       const root = document.getElementById("detail");
@@ -91,7 +91,7 @@
       <div class="card pad">
         <div class="section-title">${p.name}</div>
         <div class="muted" style="margin:4px 0">${p.type || ""}</div>
-        <div id="priceBox" class="price-lg">${money(p.price)}</div>
+        <div id="priceBox" class="price-lg">${money(p.basePrice)}</div>
 
         <div class="buy-row">
           <div>
@@ -370,7 +370,7 @@
         function updateBySize() {
           const s = sizeSel.value;
           const v = vMap[s];
-          const price = v ? Number(v.price || p.price) : p.price;
+          const price = v ? Number(v.price || p.basePrice) : p.basePrice;
           const left = v ? Number(v.stock || 0) : undefined;
 
           priceBox.textContent = money(price);
@@ -405,7 +405,7 @@
             parseInt(document.getElementById("qtySel").value || "1")
           );
           const v = vMap[size];
-          const price = v ? Number(v.price || p.price) : p.price;
+          const price = v ? Number(v.price || p.basePrice) : p.basePrice;
 
           Cart.add({ id: p.id, name: p.name, size, price, qty });
           refreshCartBadge();

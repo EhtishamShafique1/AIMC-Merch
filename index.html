@@ -83,7 +83,7 @@
     <script src="assets/cart.js"></script>
     <script>
       const grid = document.getElementById("grid");
-      const money = (n) => `PKR ${Number(n).toLocaleString()}`;
+      const money = (n) => `PKR ${Number(n).toLocaleString('en-PK').replace(/\./g, ',')}`;
 
       // draw lightweight skeletons while we fetch backend prices
       function drawSkeletons(count = (window.PRODUCTS || []).length) {
@@ -122,17 +122,17 @@
         const priced = await Promise.all(
           items.map(async (p) => {
             const min = await fetchMinPrice(p.id);
-            return { ...p, minPrice: min };
+            return { ...p, minPrice: min !== null ? min : p.basePrice };
           })
         );
 
-        // now render cards using backend-only price (or no price text if missing)
+        // now render cards using backend price (or basePrice fallback)
         grid.innerHTML = priced
           .map((p) => {
             const priceHtml =
               p.minPrice && isFinite(p.minPrice)
                 ? `<div class="price">From ${money(p.minPrice)}</div>`
-                : `<div class="muted">See details</div>`;
+                : `<div class="price">${money(p.basePrice || 0)}</div>`;
             return `
           <a class="card" href="product.html?id=${encodeURIComponent(
             p.id
