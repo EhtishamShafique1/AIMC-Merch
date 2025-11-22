@@ -111,9 +111,113 @@
         <div id="stockNote" class="muted stock-note"></div>
 
         <div class="muted" style="margin-top:12px">
-          ${p.desc || ""} ${
-          imgs.length > 1 ? "Size chart is the last image in the gallery." : ""
-        }
+          ${p.desc || ""}
+        </div>
+
+        <!-- Size Chart -->
+        <div class="size-charts">
+          <div class="chart-header">
+            <div class="chart-title">Size Guide</div>
+            <div class="chart-subtitle">All measurements are in inches</div>
+          </div>
+          
+          <div class="chart-body">
+            ${(() => {
+              const isHoodie = (p.type || '').toLowerCase().includes('hoodie');
+              
+              if (isHoodie) {
+                return `
+            <div class="chart-label"><i class="fa-solid fa-shirt"></i> Hoodies (Oversized)</div>
+            <div class="chart-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Size</th>
+                    <th>Length</th>
+                    <th>Width</th>
+                    <th>Shoulder</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>S</strong></td>
+                    <td>26</td>
+                    <td>22</td>
+                    <td>21</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M</strong></td>
+                    <td>27</td>
+                    <td>23</td>
+                    <td>22</td>
+                  </tr>
+                  <tr>
+                    <td><strong>L</strong></td>
+                    <td>28</td>
+                    <td>24</td>
+                    <td>23</td>
+                  </tr>
+                  <tr>
+                    <td><strong>XL</strong></td>
+                    <td>29</td>
+                    <td>25</td>
+                    <td>24</td>
+                  </tr>
+                  <tr>
+                    <td><strong>XXL</strong></td>
+                    <td>30</td>
+                    <td>26</td>
+                    <td>25</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+                `;
+              } else {
+                return `
+            <div class="chart-label"><i class="fa-solid fa-vest"></i> Jackets & Zippers</div>
+            <div class="chart-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Size</th>
+                    <th>Length</th>
+                    <th>Width</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>S</strong></td>
+                    <td>26</td>
+                    <td>19</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M</strong></td>
+                    <td>27</td>
+                    <td>20</td>
+                  </tr>
+                  <tr>
+                    <td><strong>L</strong></td>
+                    <td>28</td>
+                    <td>21</td>
+                  </tr>
+                  <tr>
+                    <td><strong>XL</strong></td>
+                    <td>29</td>
+                    <td>22</td>
+                  </tr>
+                  <tr>
+                    <td><strong>XXL</strong></td>
+                    <td>30</td>
+                    <td>23</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+                `;
+              }
+            })()}
+          </div>
         </div>
       </div>
     `;
