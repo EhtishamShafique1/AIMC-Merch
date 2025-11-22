@@ -67,7 +67,7 @@ window.PRODUCTS = [
   },
   {
     id: "hoodie-olive-outline",
-    name: "Hoodie — AIMC Outline (Olive)",
+    name: "Hoodie — AIMC Outline (Olive Green)",
     type: "Hoodie",
     basePrice: 2100,
     sizes: ["S", "M", "L", "XL", "XXL"],
@@ -76,12 +76,12 @@ window.PRODUCTS = [
   },
   {
     id: "sweatshirt-olive-arches",
-    name: "Sweatshirt — Arches (Olive)",
+    name: "Sweatshirt — Arches (Olive Green)",
     type: "Sweatshirt",
     basePrice: 1700,
     sizes: ["S", "M", "L", "XL", "XXL"],
     images: ["assets/img/sweatshirt-olive-arches.jpeg"],
-    desc: "Olive crew with arch motif."
+    desc: "Olive crew with AIMC auditorium."
   },
   {
     id: "sweatshirt-white-column",

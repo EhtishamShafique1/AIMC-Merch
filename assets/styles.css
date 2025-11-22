@@ -267,7 +267,7 @@ label {
   transition: transform 0.06s ease-out;
 }
 .zoom-wrap.zoomed .zoom-img {
-  transform: scale(1.6);
+  transform: scale(2.5);
   transform-origin: var(--x, 50%) var(--y, 50%);
 }
 .zoom-toggle {
