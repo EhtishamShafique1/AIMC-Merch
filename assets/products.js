@@ -8,8 +8,14 @@ window.PRODUCTS = [
     type: "Jacket",
     basePrice: 2900,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/varsity-jacket-blue.jpeg"],
-    desc: "Classic AIMC varsity jacket in blue/white."
+    images: [
+      "assets/img/varsity-jacket-blue.jpeg",
+      "assets/img/varsity-jacket-blue-front.png",
+      "assets/img/varsity-jacket-blue-back.png",
+      "assets/img/varsity-jacket-blue-front-close.png",
+      "assets/img/varsity-jacket-blue-back-close.png",
+    ],
+    desc: "Classic AIMC varsity jacket in blue/white.",
   },
   {
     id: "varsity-jacket-black",
@@ -17,8 +23,14 @@ window.PRODUCTS = [
     type: "Jacket",
     basePrice: 2900,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/varsity-jacket-black.jpeg"],
-    desc: "Classic AIMC varsity jacket in black/white."
+    images: [
+      "assets/img/varsity-jacket-black.jpeg",
+      "assets/img/varsity-jacket-black-front.png",
+      "assets/img/varsity-jacket-black-back.png",
+      "assets/img/varsity-jacket-black-front-close.png",
+      "assets/img/varsity-jacket-black-back-close.png",
+    ],
+    desc: "Classic AIMC varsity jacket in black/white.",
   },
   {
     id: "tracksuit-navy",
@@ -26,8 +38,13 @@ window.PRODUCTS = [
     type: "Tracksuit",
     basePrice: 3000,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/tracksuit-navy.jpeg"],
-    desc: "Full navy tracksuit with AIMC marks."
+    images: ["assets/img/tracksuit-navy.jpeg",
+      "assets/img/tracksuit-navy-front.png",
+      "assets/img/tracksuit-navy-back.png",
+      "assets/img/tracksuit-navy-front-close.png",
+      "assets/img/tracksuit-navy-pants.jpg"
+    ],
+    desc: "Full navy tracksuit with AIMC marks.",
   },
   {
     id: "hoodie-brown-skyline",
@@ -35,8 +52,12 @@ window.PRODUCTS = [
     type: "Hoodie",
     basePrice: 2100,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/hoodie-brown-skyline.jpeg"],
-    desc: "Brown hoodie with AIMC skyline graphic."
+    images: ["assets/img/hoodie-brown-skyline.jpeg",
+      "assets/img/hoodie-brown-skyline-front.png",
+      "assets/img/hoodie-brown-skyline-back.jpg",
+      "assets/img/hoodie-brown-skyline-back-close.jpg"
+    ],
+    desc: "Brown hoodie with AIMC skyline graphic.",
   },
   {
     id: "hoodie-black-since1975",
@@ -44,8 +65,12 @@ window.PRODUCTS = [
     type: "Hoodie",
     basePrice: 2100,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/hoodie-black-since1975.jpeg"],
-    desc: "Black hoodie with ‘Since 1975’ chest and Iqbalian back print."
+    images: ["assets/img/hoodie-black-since1975.jpeg",
+      "assets/img/hoodie-black-since1975-front.png",
+      "assets/img/hoodie-black-since1975-back.png",
+      "assets/img/hoodie-black-since1975-back-close.png"
+    ],
+    desc: "Black hoodie with ‘Since 1975’ chest and Iqbalian back print.",
   },
   {
     id: "hoodie-blue-crest",
@@ -53,8 +78,12 @@ window.PRODUCTS = [
     type: "Hoodie",
     basePrice: 2100,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/hoodie-blue-crest.jpeg"],
-    desc: "Blue hoodie with AIMC crest & quote back."
+    images: ["assets/img/hoodie-blue-crest.jpeg",
+      "assets/img/hoodie-blue-crest-front.jpg",
+      "assets/img/hoodie-blue-crest-back.jpg",
+      "assets/img/hoodie-blue-crest-back-close.jpg"
+    ],
+    desc: "Blue hoodie with AIMC crest & quote back.",
   },
   {
     id: "hoodie-white-calligraphy",
@@ -62,8 +91,12 @@ window.PRODUCTS = [
     type: "Hoodie",
     basePrice: 2100,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/hoodie-white-calligraphy.jpeg"],
-    desc: "White hoodie with Urdu calligraphy + AIMC 1975."
+    images: ["assets/img/hoodie-white-calligraphy.jpeg",
+      "assets/img/hoodie-white-calligraphy-front.png",
+      "assets/img/hoodie-white-calligraphy-back.png",
+      "assets/img/hoodie-white-calligraphy-back-close.png"
+    ],
+    desc: "White hoodie with Urdu calligraphy + AIMC 1975.",
   },
   {
     id: "hoodie-olive-outline",
@@ -71,8 +104,13 @@ window.PRODUCTS = [
     type: "Hoodie",
     basePrice: 2100,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/hoodie-olive-outline.jpeg"],
-    desc: "Olive hoodie with outlined AIMC wordmark."
+    images: ["assets/img/hoodie-olive-outline.jpeg",
+      "assets/img/hoodie-olive-outline-front.png",
+      "assets/img/hoodie-olive-outline-back.png",
+      "assets/img/hoodie-olive-outline-back-close.png",
+      "assets/img/hoodie-olive-outline-front-close.png"
+    ],
+    desc: "Olive hoodie with outlined AIMC wordmark.",
   },
   {
     id: "sweatshirt-olive-arches",
@@ -80,8 +118,11 @@ window.PRODUCTS = [
     type: "Sweatshirt",
     basePrice: 1700,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/sweatshirt-olive-arches.jpeg"],
-    desc: "Olive crew with AIMC auditorium."
+    images: ["assets/img/sweatshirt-olive-arches.jpeg",
+      "assets/img/sweatshirt-olive-arches-front.png",
+      "assets/img/sweatshirt-olive-arches-front-close.png"
+    ],
+    desc: "Olive crew with AIMC auditorium.",
   },
   {
     id: "sweatshirt-white-column",
@@ -89,8 +130,11 @@ window.PRODUCTS = [
     type: "Sweatshirt",
     basePrice: 1700,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/sweatshirt-white-column.jpeg"],
-    desc: "White crew with AIMC column logo."
+    images: ["assets/img/sweatshirt-white-column.jpeg",
+      "assets/img/sweatshirt-white-column-front.png",
+      "assets/img/sweatshirt-white-column-front-close.png"
+    ],
+    desc: "White crew with AIMC column logo.",
   },
   {
     id: "sweatshirt-beige-aimc",
@@ -98,8 +142,11 @@ window.PRODUCTS = [
     type: "Sweatshirt",
     basePrice: 1700,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/sweatshirt-beige-aimc.jpeg"],
-    desc: "Beige crew with ‘Aimc’ script."
+    images: ["assets/img/sweatshirt-beige-aimc.jpeg",
+      "assets/img/sweatshirt-beige-aimc-front.png",
+      "assets/img/sweatshirt-beige-aimc-front-close.png"
+    ],
+    desc: "Beige crew with ‘Aimc’ script.",
   },
   {
     id: "sweatshirt-maroon-iqbalian",
@@ -107,7 +154,9 @@ window.PRODUCTS = [
     type: "Sweatshirt",
     basePrice: 1700,
     sizes: ["S", "M", "L", "XL", "XXL"],
-    images: ["assets/img/sweatshirt-maroon-iqbalian.jpeg"],
-    desc: "Maroon crew with ‘Iqbalian’ script."
-  }
+    images: ["assets/img/sweatshirt-maroon-iqbalian.jpeg",
+      "assets/img/sweatshirt-maroon-iqbalian-front.png",
+      "assets/img/sweatshirt-maroon-iqbalian-front-close.png"],
+    desc: "Maroon crew with ‘Iqbalian’ script.",
+  },
 ];

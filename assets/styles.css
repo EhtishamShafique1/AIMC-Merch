@@ -181,7 +181,6 @@ textarea {
   min-width: 0;
 }
 
-
 .input:focus,
 select:focus,
 textarea:focus,
@@ -284,6 +283,21 @@ label {
   align-items: center;
 }
 
+/* Fix inconsistent image sizes in gallery */
+.zoom-wrap {
+  aspect-ratio: 4 / 3 !important; /* keep gallery shape consistent */
+  background: #0f141c;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.zoom-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important; /* prevents stretching */
+  background: #0f141c; /* fills empty sides with dark color */
+}
+
 .thumbs {
   display: flex;
   gap: 8px;
@@ -327,11 +341,14 @@ label {
   gap: 10px;
 }
 
-.stack{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
-@media (max-width: 420px){
-  .stack{grid-template-columns:1fr;}
+.stack {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
-
+@media (max-width: 420px) {
+  .stack {
+    grid-template-columns: 1fr;
+  }
+}
 
 .right {
   display: flex;
