@@ -103,7 +103,7 @@
             <label>Delivery</label>
             <select name="delivery" required class="input" id="deliverySel">
               <option value="Pickup (Campus)">Pickup (Campus)</option>
-              <option value="Delivery (Lahore)">Delivery (Lahore)</option>
+              <option value="Delivery">Delivery</option>
             </select>
           </div>
 
@@ -124,7 +124,7 @@
             <select name="payment_method" required class="input" id="payMethod">
               <option value="" selected disabled>Select payment method…</option>
               <option value="HBL">HBL (Bank Transfer)</option>
-              <option value="ABL">ABL (Bank Transfer)</option>
+              <option value="JAZZCASH">JazzCash / Raast</option>
             </select>
           </div>
 
@@ -137,6 +137,15 @@
               id="txnInput"
               placeholder="Enter the bank TXN / reference ID"
             />
+          </div>
+
+          <!-- Moved UP: payment info card directly under payment fields -->
+          <div
+            id="paymentInfo"
+            style="grid-column: 1/-1; margin-top: 4px"
+            class="muted"
+          >
+            Select a payment method to see account details and instructions.
           </div>
 
           <div style="grid-column: 1/-1">
@@ -160,11 +169,6 @@
               placeholder="Any special instructions, name on jersey, etc."
             ></textarea>
           </div>
-        </div>
-
-        <!-- Dynamic bank details (copyable) + amount to transfer -->
-        <div id="paymentInfo" class="muted" style="margin-top: 8px">
-          Select a payment method to see account details and instructions.
         </div>
 
         <div class="right" style="margin-top: 12px">
@@ -262,13 +266,13 @@
           accountLabel: "HBL Account",
           accountNumber: "12447901757003",
           holder: "Shahab Zafar",
-          text: "Transfer to the bank account below. After sending, enter the Bank TXN / Reference ID and upload a screenshot.",
+          text: "Transfer to the HBL bank account below. After sending, enter the TXN / Reference ID and upload a screenshot.",
         },
-        ABL: {
-          accountLabel: "ABL Account",
-          accountNumber: "53580020056014000012",
+        JAZZCASH: {
+          accountLabel: "JazzCash / Raast",
+          accountNumber: "03036980295",
           holder: "Shahab Zafar",
-          text: "Transfer to the bank account below. After sending, enter the Bank TXN / Reference ID and upload a screenshot.",
+          text: "Send the amount via JazzCash or Raast to the mobile number below. After sending, enter the TXN / Reference ID and upload a screenshot.",
         },
       };
 
@@ -299,8 +303,9 @@
         if (!v) {
           payInfo.innerHTML =
             "Select a payment method to see account details and instructions.";
-          txnLbl.textContent = "Transaction ID";
-          txnInp.placeholder = "Enter the bank TXN / reference ID";
+          txnLbl.textContent = "Transaction / Reference ID";
+          txnInp.placeholder = "Bank / JazzCash / Raast TXN or reference ID";
+
           return;
         }
         const m = methods[v];

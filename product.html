@@ -65,8 +65,17 @@
           .map((s) => `<option>${s}</option>`)
           .join("");
 
-        const imgs = p.images?.length ? p.images : [""];
-        const thumbs = imgs
+        // ---- NEW: build gallery images = product images + size chart at the end ----
+        // Decide which size chart to use for this product
+        const sizeChart = (p.type || "").toLowerCase().includes("hoodie")
+          ? "assets/img/size-chart-hoodies.png" // change to .jpeg if that's your file
+          : "assets/img/size-chart.png"; // change to .jpeg if that's your file
+
+        let galleryImages =
+          Array.isArray(p.images) && p.images.length ? [...p.images] : [];
+        galleryImages.push(sizeChart);
+
+        const thumbs = galleryImages
           .map(
             (src, i) =>
               `<img src="${src}" data-src="${src}" class="${
@@ -76,41 +85,43 @@
           .join("");
 
         root.innerHTML = `
-        <div class="card pad">
-          <div class="gallery">
-            <div class="zoom-wrap" id="zoom">
-              <img class="zoom-img" id="mainImg" src="${imgs[0]}" alt="${
-          p.name
-        }">
-              <button id="zoomToggle" class="zoom-toggle"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom</button>
-            </div>
-            <div class="thumbs" id="thumbs">${thumbs}</div>
+      <div class="card pad">
+        <div class="gallery">
+          <div class="zoom-wrap" id="zoom">
+            <img class="zoom-img" id="mainImg" src="${
+              galleryImages[0] || ""
+            }" alt="${p.name}">
+            <button id="zoomToggle" class="zoom-toggle"><i class="fa-solid fa-magnifying-glass-plus"></i> Zoom</button>
+          </div>
+          <div class="thumbs" id="thumbs">${thumbs}</div>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <div class="section-title">${p.name}</div>
+        <div class="muted" style="margin:4px 0">${p.type || ""}</div>
+        <div id="priceBox" class="price-lg">${money(p.price)}</div>
+
+        <div class="buy-row">
+          <div>
+            <label>Size</label>
+            <select id="sizeSel" class="input">${sizeOptions}</select>
+          </div>
+          <div>
+            <label>Qty</label>
+            <input id="qtySel" type="number" min="1" value="1" class="input">
+          </div>
+          <div style="align-self:end">
+            <button id="addBtn" class="btn"><i class="fa-solid fa-cart-plus"></i> Add to cart</button>
           </div>
         </div>
+        <div id="stockNote" class="muted stock-note"></div>
 
-        <div class="card pad">
-          <div class="section-title">${p.name}</div>
-          <div class="muted" style="margin:4px 0">${p.type || ""}</div>
-          <div id="priceBox" class="price-lg">${money(p.price)}</div>
-
-          <div class="buy-row">
-            <div>
-              <label>Size</label>
-              <select id="sizeSel" class="input">${sizeOptions}</select>
-            </div>
-            <div>
-              <label>Qty</label>
-              <input id="qtySel" type="number" min="1" value="1" class="input">
-            </div>
-            <div style="align-self:end">
-              <button id="addBtn" class="btn"><i class="fa-solid fa-cart-plus"></i> Add to cart</button>
-            </div>
-          </div>
-          <div id="stockNote" class="muted stock-note"></div>
-
-          <div class="muted" style="margin-top:12px">${p.desc || ""}</div>
-        </div>
-      `;
+        <div class="muted" style="margin-top:12px">${
+          p.desc || ""
+        } <br><br><span style="font-size:13px;color:var(--muted)">Size chart is the last image in the gallery.</span></div>
+      </div>
+    `;
 
         // Thumbs
         const main = document.getElementById("mainImg");
