@@ -19,16 +19,19 @@
   <body>
     <div class="wrap">
       <header>
-        <a class="brand" href="index.html"
-          ><i class="fa-solid fa-shirt"></i> AIMC Merch</a
-        >
+        <a class="brand" href="index.html">
+          <img src="assets/img/AIMC-Merch-Logo.jpeg" alt="AIMC Merch" class="logo">
+        </a>
         <div class="header-actions">
           <a class="icon-btn" href="checkout.html"
             ><i class="fa-solid fa-cart-shopping"></i><span>Cart</span
-            ><span id="cartBadge" class="badge">0</span></a
-          >
+            ><span id="cartBadge" class="badge">0</span></a>
         </div>
       </header>
+
+      <div class="ticker" role="region" aria-label="Announcement">
+        <div class="ticker-track">New: Size charts are now available on product pages — please check sizes before ordering • In case of any problem contact us on WhatsApp: <a href="https://wa.me/923036980295" style="color:var(--accent);text-decoration:underline">+92 303 6980295</a></div>
+      </div>
 
       <!-- Cart -->
       <div class="card pad">
@@ -48,18 +51,23 @@
           </table>
         </div>
 
-        <!-- Summary with delivery fee -->
-        <div class="right" style="margin-top: 10px; gap: 16px; flex-wrap: wrap">
-          <div class="muted">Subtotal:</div>
-          <div id="subtotal" style="font-weight: 800">PKR 0</div>
-          <div class="muted" id="feeLabel" style="display: none">
-            • Delivery fee:
+        <!-- Stacked cards for small screens (populated by JS) -->
+        <div id="cartCards" class="cart-cards" aria-live="polite"></div>
+
+        <!-- Summary with delivery fee (clean layout) -->
+        <div class="summary" style="margin-top: 10px">
+          <div class="summary-row">
+            <div class="muted">Subtotal</div>
+            <div id="subtotal" class="summary-amt">PKR 0</div>
           </div>
-          <div id="deliveryFee" style="font-weight: 800; display: none">
-            PKR 0
+          <div class="summary-row" id="feeRow" style="display:none">
+            <div class="muted">Delivery fee</div>
+            <div id="deliveryFee" class="summary-amt">PKR 0</div>
           </div>
-          <div class="muted">• Total:</div>
-          <div id="grandTotal" style="font-weight: 800">PKR 0</div>
+          <div class="summary-row total">
+            <div class="muted">Total</div>
+            <div id="grandTotal" class="summary-amt">PKR 0</div>
+          </div>
         </div>
       </div>
 
@@ -144,7 +152,7 @@
           <div>
             <label>Delivery</label>
             <select name="delivery" required class="input" id="deliverySel">
-              <option value="Pickup (Campus)">Pickup (Campus)</option>
+              <option value="Pickup (AIMC Campus)">Pickup (AIMC Campus)</option>
               <option value="Delivery">Delivery</option>
             </select>
           </div>
@@ -230,11 +238,11 @@
     <script src="assets/cart.js"></script>
     <script>
       // ---------- DOM refs ----------
-      const tbody = document.querySelector("#cartTable tbody");
-      const subtotalEl = document.getElementById("subtotal");
-      const feeLabelEl = document.getElementById("feeLabel");
-      const feeEl = document.getElementById("deliveryFee");
-      const grandEl = document.getElementById("grandTotal");
+        const tbody = document.querySelector("#cartTable tbody");
+        const subtotalEl = document.getElementById("subtotal");
+        const feeRow = document.getElementById("feeRow");
+        const feeEl = document.getElementById("deliveryFee");
+        const grandEl = document.getElementById("grandTotal");
       const statusEl = document.getElementById("status");
 
       const paySel = document.getElementById("payMethod");
@@ -266,11 +274,24 @@
         return v.includes("delivery") ? 200 : 0;
       }
 
+      // ---------- Helpers ----------
+      function initials(name) {
+        if (!name) return "";
+        return name
+          .split(" ")
+          .map((s) => (s ? s[0] : ""))
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+      }
+
       // ---------- Cart render ----------
       function render() {
         const cart = Cart.load();
+        const cards = document.getElementById("cartCards");
         if (!cart.length) {
           tbody.innerHTML = `<tr><td colspan="5" class="muted">Your cart is empty.</td></tr>`;
+          if (cards) cards.innerHTML = `<div class="muted">Your cart is empty.</div>`;
         } else {
           tbody.innerHTML = cart
             .map(
@@ -278,18 +299,35 @@
           <tr>
             <td>${i.name}</td>
             <td>${i.size}</td>
-            <td><input type="number" min="1" value="${
-              i.qty
-            }" class="input" style="width:96px" onchange="updateQty('${
-                i.key
-              }', this.value)"></td>
+            <td><input type="number" min="1" value="${i.qty}" class="input" style="width:96px" onchange="updateQty('${i.key}', this.value)"></td>
             <td>${formatPKR(i.price * i.qty)}</td>
-            <td><button class="btn secondary" onclick="removeItem('${
-              i.key
-            }');return false;">Remove</button></td>
+            <td><button class="btn secondary" onclick="removeItem('${i.key}');return false;">Remove</button></td>
           </tr>`
             )
             .join("");
+
+          // build stacked cards for small screens
+          if (cards) {
+            cards.innerHTML = cart
+              .map(
+                (i) => `
+              <div class="cart-card">
+                <div class="main">
+                  <div class="title">${i.name}</div>
+                  <div class="meta">Size: ${i.size}</div>
+                  <div class="meta">Price per item: ${formatPKR(i.price)}</div>
+                </div>
+                <div class="price-block">
+                  <div class="actions">
+                    <input type="number" min="1" value="${i.qty}" class="input" onchange="updateQty('${i.key}', this.value)">
+                    <button class="btn secondary" onclick="removeItem('${i.key}');return false;">Remove</button>
+                  </div>
+                  <div class="line2">${formatPKR(i.price * i.qty)}</div>
+                </div>
+              </div>`
+              )
+              .join("");
+          }
         }
         refreshCartBadge();
         recalcTotals(); // summary
@@ -432,12 +470,10 @@
         grandEl.textContent = formatPKR(grand);
 
         if (fee > 0) {
-          feeLabelEl.style.display = "inline";
-          feeEl.style.display = "inline";
-          feeEl.textContent = formatPKR(fee);
+          if (feeRow) feeRow.style.display = "";
+          if (feeEl) feeEl.textContent = formatPKR(fee);
         } else {
-          feeLabelEl.style.display = "none";
-          feeEl.style.display = "none";
+          if (feeRow) feeRow.style.display = "none";
         }
       }
 
@@ -522,5 +558,7 @@
       updateDisciplineUI();
       render(); // draws cart and totals
     </script>
+
+    
   </body>
 </html>
