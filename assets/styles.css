@@ -309,6 +309,13 @@ label {
   .right { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
+/* On small screens swap action order so Place Order appears before Clear Cart */
+@media (max-width: 480px) {
+  #placeOrderBtn { order: -1; width: 100%; }
+  #clear { order: 1; width: 100%; }
+  .right { width: 100%; }
+}
+
 /* Enhanced visuals for cart cards */
 .cart-card {
   padding: 14px;
