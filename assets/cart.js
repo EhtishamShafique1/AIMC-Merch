@@ -1,7 +1,7 @@
 (function () {
   const KEY = "aimc_cart";
   const API =
-    "https://script.google.com/macros/s/AKfycbytFn_U1s4rG29ayl16zGX6kgT6TCEq0NYi3R3ay5YCvpoipD9TYkYEOv-TrLIXUi23RQ/exec"; // <-- your Apps Script /exec URL
+    "https://script.google.com/macros/s/AKfycbybuNte9gWEAeAUoe_XSPHVzI3fg-w2WPOR96yPjfBviwXZ2eIVz9v2LM1pWb1h7dX5xw/exec"; // <-- updated Apps Script /exec URL (confirmed reachable)
   const DELIVERY_FEE_PK = 200;
 
   function load() {
@@ -82,9 +82,52 @@
 
   async function getVariants(productId) {
     const url = `${API}?stock=1&id=${encodeURIComponent(productId)}`;
-    const r = await fetch(url);
-    const j = await r.json();
-    return j.variants || [];
+    try {
+      const r = await fetch(url);
+      const j = await r.json();
+      if (!j) {
+        console.warn("Cart.getVariants -> empty response from API", url);
+        return [];
+      }
+      if (j.ok === false) {
+        console.warn("Cart.getVariants -> API returned error", j.error || j);
+        return [];
+      }
+
+      const raw = j.variants || [];
+      const variants = raw.map((v) => {
+        // Price can be number or string (e.g. "PKR 2,100"); handle both
+        let price = 0;
+        if (typeof v.price === "number") {
+          price = v.price;
+        } else {
+          const priceRaw = (v.price || v.price_str || "").toString();
+          const cleaned = priceRaw.replace(/[^\d.,]/g, "").replace(/,/g, "");
+          price = Number(cleaned) || 0;
+        }
+
+        const idVal = v.id || v.product_id || v["product id"] || v.product || "";
+        const sizeVal = v.size || v.s || v["size"] || "";
+        const stockVal = Number(v.stock || v.qty || v["stock"] || 0);
+
+        return {
+          id: idVal,
+          size: sizeVal,
+          price: price,
+          stock: stockVal,
+        };
+      });
+
+      if (!variants.length) {
+        console.warn("Cart.getVariants -> no variants returned for", productId, "from", url);
+      }
+
+      console.debug("Cart.getVariants ->", variants);
+      return variants;
+    } catch (err) {
+      console.error("Cart.getVariants fetch error", err, url);
+      return [];
+    }
   }
 
   window.Cart = {
@@ -107,3 +150,7 @@
   };
   document.addEventListener("DOMContentLoaded", window.refreshCartBadge);
 })();
+
+
+
+
