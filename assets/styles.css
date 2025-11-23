@@ -352,11 +352,25 @@ label {
 .cart-card .controls .line2 { font-weight:800; font-size:16px }
 .cart-card .actions { display:flex;gap:8px;align-items:center;justify-content:flex-end }
 .cart-card .actions .btn { padding:8px 10px; font-size:13px; border-radius:10px }
+/* Push the line total to the far right, away from the Remove button */
+.cart-card .actions .line2 { margin-left: auto; font-weight:800; white-space:nowrap; text-align:right; padding-left:8px }
 
 .summary { margin-top: 10px; background: transparent; display:flex; flex-direction:column; gap:8px }
 .summary-row { display:flex; justify-content:space-between; align-items:center; gap:10px }
 .summary-row .summary-amt { font-weight:800 }
 .summary-row.total .summary-amt { font-size:18px }
+
+/* Desktop vs mobile summary handling
+   - .summary.desktop: shown on desktop (default)
+   - .summary.mobile: duplicate summary shown inside the checkout form on phones
+*/
+.summary.mobile { display: none; }
+.summary.desktop { display: flex; }
+
+@media (max-width: 720px) {
+  .summary.desktop { display: none; }
+  .summary.mobile { display: flex; }
+}
 
 
 /* Product detail */

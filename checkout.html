@@ -221,6 +221,22 @@
           </div>
         </div>
 
+        <!-- Mobile summary (will show on small screens) -->
+        <div class="summary mobile" style="margin-top:10px">
+          <div class="summary-row">
+            <div class="muted">Subtotal</div>
+            <div id="subtotalMobile" class="summary-amt">PKR 0</div>
+          </div>
+          <div class="summary-row" id="feeRowMobile" style="display:none">
+            <div class="muted">Delivery fee</div>
+            <div id="deliveryFeeMobile" class="summary-amt">PKR 0</div>
+          </div>
+          <div class="summary-row total">
+            <div class="muted">Total</div>
+            <div id="grandTotalMobile" class="summary-amt">PKR 0</div>
+          </div>
+        </div>
+
         <div class="right" style="margin-top: 12px">
           <button type="button" class="btn secondary" id="clear">
             Clear Cart
@@ -315,14 +331,13 @@
                 <div class="main">
                   <div class="title">${i.name}</div>
                   <div class="meta">Size: ${i.size}</div>
-                  <div class="meta">Price per item: ${formatPKR(i.price)}</div>
                 </div>
                 <div class="controls">
                   <div class="actions">
                     <input type="number" min="1" value="${i.qty}" class="input" onchange="updateQty('${i.key}', this.value)">
                     <button class="btn secondary" onclick="removeItem('${i.key}');return false;">Remove</button>
+                    <div class="line2">${formatPKR(i.price * i.qty)}</div>
                   </div>
-                  <div class="line2">${formatPKR(i.price * i.qty)}</div>
                 </div>
               </div>`
               )
@@ -468,12 +483,22 @@
 
         subtotalEl.textContent = formatPKR(sub);
         grandEl.textContent = formatPKR(grand);
+        // also update mobile summary if present
+        const subM = document.getElementById("subtotalMobile");
+        const feeRowM = document.getElementById("feeRowMobile");
+        const feeElM = document.getElementById("deliveryFeeMobile");
+        const grandM = document.getElementById("grandTotalMobile");
+        if (subM) subM.textContent = formatPKR(sub);
+        if (grandM) grandM.textContent = formatPKR(grand);
 
         if (fee > 0) {
           if (feeRow) feeRow.style.display = "";
           if (feeEl) feeEl.textContent = formatPKR(fee);
+          if (feeRowM) feeRowM.style.display = "";
+          if (feeElM) feeElM.textContent = formatPKR(fee);
         } else {
           if (feeRow) feeRow.style.display = "none";
+          if (feeRowM) feeRowM.style.display = "none";
         }
       }
 
