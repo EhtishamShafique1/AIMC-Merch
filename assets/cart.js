@@ -1,7 +1,7 @@
 (function () {
   const KEY = "aimc_cart";
   const API =
-    "https://script.google.com/macros/s/AKfycbybuNte9gWEAeAUoe_XSPHVzI3fg-w2WPOR96yPjfBviwXZ2eIVz9v2LM1pWb1h7dX5xw/exec"; // <-- updated Apps Script /exec URL (confirmed reachable)
+    "https://script.google.com/macros/s/AKfycbz-gmYORvXpJoHnfpcqfdQZi6MLPUeJLTA6NUOgkzssKYqGP3AGeA3G23FzlMWm2R0-Ow/exec"; // <-- updated Apps Script /exec URL (confirmed reachable)
   const DELIVERY_FEE_PK = 200;
 
   function load() {
