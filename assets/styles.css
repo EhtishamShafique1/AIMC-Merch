@@ -297,6 +297,24 @@ label {
 .cart-card .actions { display:flex; gap:8px; align-items:center; }
 .cart-card input[type="number"] { width: 72px; }
 
+/* Tighter controls for phones to avoid layout break (S23 Ultra, etc.) */
+.cart-card .actions input[type="number"] { width:56px; padding:8px; }
+.cart-card .actions .btn { padding:6px 8px; font-size:13px; }
+.cart-card .controls { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+
+@media (max-width: 420px) {
+  /* if still cramped on very narrow screens, adjust controls alignment */
+  .cart-card { grid-template-columns: 1fr auto; }
+  .cart-card .controls { align-items:flex-end; }
+}
+
+@media (max-width: 360px) {
+  .cart-card { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  .cart-card .controls { align-items:flex-start; text-align:left; }
+  .cart-card .actions { justify-content:flex-start; }
+  .cart-card .controls .line2 { font-size:16px; }
+}
+
 @media (max-width: 720px) {
   /* hide wide tables on small screens */
   .table-wrap { display: none; }
@@ -327,10 +345,11 @@ label {
 .cart-card .main {
   display:flex;flex-direction:column;gap:6px;
 }
+.cart-card .controls { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
 .cart-card .title { font-weight:800; }
-.cart-card .price-block { text-align:right; min-width:120px }
-.cart-card .price-block .line1 { color:var(--muted); font-size:13px }
-.cart-card .price-block .line2 { font-weight:800; font-size:16px }
+.cart-card .controls { min-width:120px }
+.cart-card .controls .line1 { color:var(--muted); font-size:13px }
+.cart-card .controls .line2 { font-weight:800; font-size:16px }
 .cart-card .actions { display:flex;gap:8px;align-items:center;justify-content:flex-end }
 .cart-card .actions .btn { padding:8px 10px; font-size:13px; border-radius:10px }
 
@@ -583,11 +602,12 @@ label {
 
 /* Mobile responsiveness */
 @media (max-width: 520px) {
-  .chart-label {
-    font-size: 13px;
-    padding: 8px 12px;
-  }
-  
+  /* stack price block under content on narrow devices */
+  .cart-card { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  .cart-card .controls { align-items: stretch; }
+  .cart-card .actions { justify-content: flex-start; }
+  .cart-card .controls { align-items:flex-start; text-align:left; }
+
   .chart-title {
     font-size: 18px;
   }

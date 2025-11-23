@@ -317,7 +317,7 @@
                   <div class="meta">Size: ${i.size}</div>
                   <div class="meta">Price per item: ${formatPKR(i.price)}</div>
                 </div>
-                <div class="price-block">
+                <div class="controls">
                   <div class="actions">
                     <input type="number" min="1" value="${i.qty}" class="input" onchange="updateQty('${i.key}', this.value)">
                     <button class="btn secondary" onclick="removeItem('${i.key}');return false;">Remove</button>
