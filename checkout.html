@@ -287,7 +287,16 @@
       }
       function calcFee() {
         const v = (deliverySel.value || "").toLowerCase();
-        return v.includes("delivery") ? 200 : 0;
+        // No fee for pickup or when delivery not selected
+        if (!v.includes("delivery")) return 0;
+
+        // Compute total item count from cart (sum of qtys)
+        const cart = Cart.load();
+        const totalItems = cart.reduce((s, it) => s + (parseInt(it.qty || 0) || 0), 0);
+        if (!totalItems) return 0; // guard: empty cart
+
+        // Minimum 250 for the first item, and +50 for every additional item
+        return 250 + Math.max(0, totalItems - 1) * 50;
       }
 
       // ---------- Helpers ----------
