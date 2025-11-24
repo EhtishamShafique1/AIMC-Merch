@@ -1,7 +1,7 @@
 (function () {
   const KEY = "aimc_cart";
   const API =
-    "https://script.google.com/macros/s/AKfycbxWxz7XTpuAZvlUjZekoKokOfSv8pHM5zbAfXgyGo3FyDaZ4zWeT1dKWXFPCOBfnQiKdQ/exec"; // <-- updated Apps Script /exec URL (confirmed reachable)
+    "https://script.google.com/macros/s/AKfycbzSnFc_8bH3hEtMLTVpCkGpnLHDTVR6AxCRXVepkKUeugkJSnqVfgPujguRmyxUO5bo/exec"; // <-- updated Apps Script /exec URL (confirmed reachable)
   const DELIVERY_FEE_PK = 200;
 
   function load() {
@@ -61,13 +61,17 @@
     const cart = load();
     if (!cart.length) throw new Error("Cart is empty");
 
-    const fee = deliveryFeeFromForm(formEl);
-    const grand = subtotal() + fee;
+    // Send only IDs, sizes, and quantities (no prices/names)
+    // Server will validate product IDs and calculate authoritative prices
+    const minimalCart = cart.map(item => ({
+      id: item.id,
+      size: item.size || '',
+      qty: Number(item.qty || 0)
+    }));
 
     const fd = new FormData(formEl);
-    fd.append("cart_json", JSON.stringify(cart));
-    fd.append("delivery_fee", String(fee));
-    fd.append("total", String(grand));
+    fd.append("cart_json", JSON.stringify(minimalCart));
+    // Note: delivery fee and total are now calculated server-side
 
     const file = formEl.querySelector('input[name="screenshot"]')?.files?.[0];
     if (file) {

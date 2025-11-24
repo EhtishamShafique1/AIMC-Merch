@@ -219,6 +219,9 @@
               placeholder="Any special instructions...."
             ></textarea>
           </div>
+
+          <!-- Honeypot field (hidden from humans, catches bots) -->
+          <input type="text" name="website" style="position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" />
         </div>
 
         <!-- Mobile summary (will show on small screens) -->
@@ -529,6 +532,30 @@
 
       disciplineSel.addEventListener("change", updateDisciplineUI);
 
+      // ---------- Validation helpers ----------
+      function isValidEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+      }
+
+      function isValidPhone(phone) {
+        // Pakistani phone: 11 digits starting with 0, or 10 digits, or with +92
+        const cleaned = phone.replace(/[\s\-()]/g, '');
+        return /^(\+92|0)?[0-9]{10,11}$/.test(cleaned);
+      }
+
+      function checkRateLimit() {
+        const lastSubmit = localStorage.getItem('lastOrderSubmit');
+        if (!lastSubmit) return true;
+        const elapsed = Date.now() - parseInt(lastSubmit);
+        const cooldown = 30000; // 30 seconds
+        if (elapsed < cooldown) {
+          const remaining = Math.ceil((cooldown - elapsed) / 1000);
+          return { blocked: true, remaining };
+        }
+        return { blocked: false };
+      }
+
       // ---------- Submit ----------
       document
         .getElementById("checkout")
@@ -537,6 +564,52 @@
 
           // HARD GUARD: ignore if already submitting
           if (isSubmitting) return;
+
+          // 1. Check honeypot (bot trap)
+          const honeypot = e.target.querySelector('[name="website"]');
+          if (honeypot && honeypot.value) {
+            statusEl.innerHTML = '<span class="err">❌ Submission failed. Please try again.</span>';
+            return;
+          }
+
+          // 2. Validate cart not empty
+          const cart = Cart.load();
+          if (!cart.length) {
+            statusEl.innerHTML = '<span class="err">❌ Your cart is empty. Please add items before checkout.</span>';
+            return;
+          }
+
+          // 3. Validate email format
+          const emailInput = e.target.querySelector('[name="email"]');
+          if (!isValidEmail(emailInput.value)) {
+            statusEl.innerHTML = '<span class="err">❌ Please enter a valid email address.</span>';
+            emailInput.focus();
+            return;
+          }
+
+          // 4. Validate phone format
+          const phoneInput = e.target.querySelector('[name="phone"]');
+          if (!isValidPhone(phoneInput.value)) {
+            statusEl.innerHTML = '<span class="err">❌ Please enter a valid Pakistani phone number (e.g., 03001234567).</span>';
+            phoneInput.focus();
+            return;
+          }
+
+          // 5. Rate limiting check
+          const rateCheck = checkRateLimit();
+          if (rateCheck.blocked) {
+            statusEl.innerHTML = `<span class="err">❌ Please wait ${rateCheck.remaining} seconds before placing another order.</span>`;
+            return;
+          }
+
+          // 6. Validate screenshot upload
+          const screenshotInput = e.target.querySelector('[name="screenshot"]');
+          if (!screenshotInput.files || !screenshotInput.files[0]) {
+            statusEl.innerHTML = '<span class="err">❌ Please upload a payment screenshot before submitting.</span>';
+            screenshotInput.focus();
+            return;
+          }
+
           isSubmitting = true;
 
           if (submitBtn) {
@@ -549,11 +622,14 @@
           try {
             const res = await Cart.submitOrder(e.target); // sends cart_json + total + delivery_fee
             if (res.ok) {
+              // Store timestamp for rate limiting
+              localStorage.setItem('lastOrderSubmit', Date.now().toString());
+              
               statusEl.innerHTML = `<span class="ok">✅ Order placed!</span> Order ID: <b>${
                 res.orderId
               }</b>. Total: <b>${formatPKR(
                 res.total || 0
-              )}</b>. We’ll confirm on WhatsApp.`;
+              )}</b>. We'll confirm on WhatsApp.`;
               Cart.clear();
               render();
               e.target.reset();
