@@ -221,7 +221,7 @@
           </div>
 
           <!-- Honeypot field (hidden from humans, catches bots) -->
-          <input type="text" name="website" style="position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" />
+          <input type="text" name="confirm_address" style="position:absolute;left:-9999px;" tabindex="-1" autocomplete="off" aria-hidden="true" />
         </div>
 
         <!-- Mobile summary (will show on small screens) -->
@@ -566,7 +566,7 @@
           if (isSubmitting) return;
 
           // 1. Check honeypot (bot trap)
-          const honeypot = e.target.querySelector('[name="website"]');
+          const honeypot = e.target.querySelector('[name="confirm_address"]');
           if (honeypot && honeypot.value) {
             statusEl.innerHTML = '<span class="err">❌ Submission failed. Please try again.</span>';
             return;
